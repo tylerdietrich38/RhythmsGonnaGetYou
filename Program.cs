@@ -9,6 +9,7 @@ namespace RhythmsGonnaGetYou
         public int Id { get; set; }
         public string Name { get; set; }
         public string CountryOfOrigin { get; set; }
+        public int NumberOfMembers { get; set; }
         public string Website { get; set; }
         public string Style { get; set; }
         public Boolean IsSigned { get; set; }
@@ -16,6 +17,7 @@ namespace RhythmsGonnaGetYou
         public int ContactPhoneNumber { get; set; }
 
     }
+
     class Album
     {
         public int Id { get; set; }
@@ -25,6 +27,7 @@ namespace RhythmsGonnaGetYou
         public int BandId { get; set; }
         public Band Band { get; set; }
     }
+
     class Song
     {
         public int Id { get; set; }
@@ -34,6 +37,7 @@ namespace RhythmsGonnaGetYou
         public int AlbumId { get; set; }
         public Album Album { get; set; }
     }
+
     class MyMusicLabelContext : DbContext
     {
         public DbSet<Band> Band { get; set; }
@@ -105,7 +109,7 @@ namespace RhythmsGonnaGetYou
                 else if (choice == "V")
                 {
                     Console.WriteLine();
-                    Console.Write("Do you want to view (A)ll, by album (R)elease Date, that are (S)igned, that are (U)nsigned or a Band and their (A)lbums? ");
+                    Console.Write("Do you want to view (A)ll, by album (R)elease Date, that are (S)igned, that are (U)nsigned or a Band and their (W)orks? ");
                     var answer = Console.ReadLine().ToUpper();
 
                     if (answer == "A")
@@ -144,63 +148,144 @@ namespace RhythmsGonnaGetYou
                         }
                     }
 
-                    if (answer == "A")
+                    if (answer == "W")
                     {
                         var bandWorks = PromptForString("What band are you looking for? ");
-                        MyMusicLabelContext bandContent = Band.FirstOrDefault(Band => Band.Name == bandWorks);
-
+                        var bandContent = context.Band.FirstOrDefault(Band => Band.Name == bandWorks);
                         if (bandWorks == null)
                         {
                             Console.WriteLine("No bands by that name here! ");
                         }
                         else
                         {
-                            Console.WriteLine($"{bandWorks}");
+                            Console.WriteLine($"{bandWorks} and their albums ----");
+
+                            var works = context.Album.Include(album => album.Band);
+
+                            var listOfAlbums = context.Album.Where(Album => Album.Band.Name == bandWorks);
+                            foreach (var Album in listOfAlbums)
+                            {
+                                Console.WriteLine($"{Album.Title}");
+                            }
+                        }
+                    }
+                }
+                else if (choice == "A")
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Do you want add a new (B)and, (A)lbum, or (S)ong? ");
+                    var answer = Console.ReadLine().ToUpper();
+
+                    if (answer == "B")
+                    {
+                        var enteredBand = new Band();
+
+                        enteredBand.Name = PromptForString("What is the Band's name? ");
+
+                        enteredBand.CountryOfOrigin = PromptForString("What country is this band from? ");
+
+                        enteredBand.NumberOfMembers = PromptForInteger("How many members are in the band? ");
+
+                        enteredBand.Website = PromptForString("What is the band's website? ");
+
+                        enteredBand.Style = PromptForString("What Genre of music does the band play? ");
+
+                        // Need help on how to approach this below
+                        Console.Write("Is the band signed? ");
+                        var bandSigned = Console.ReadLine();
+
+                        enteredBand.ContactName = PromptForString("What is the contacts name? ");
+
+                        enteredBand.ContactPhoneNumber = PromptForInteger("What is the contacts phone number? ");
+
+                        context.Band.Add(enteredBand);
+                        context.SaveChanges();
+                    }
+
+                    else if (answer == "A")
+                    {
+                        var enteredAlbum = new Album();
+
+                        enteredAlbum.Title = PromptForString("What is the Album's title?");
+
+                        Console.Write("Is the album explicit? ");
+                        var explicitAlbum = Console.ReadLine();
+
+                        Console.WriteLine("When was the album released? ");
+                        var releasedAlbum = Console.ReadLine();
+
+                        enteredAlbum.BandId = PromptForInteger("What is the associated band's ID number? ");
+
+                        context.Album.Add(enteredAlbum);
+                        context.SaveChanges();
+                    }
+
+                    else if (answer == "S")
+                    {
+                        var enteredSong = new Song();
+
+                        enteredSong.Title = PromptForString("What is the song's title? ");
+
+                        enteredSong.TrackNumber = PromptForInteger("What is the song's track number? ");
+
+                        TimeSpan timeSpan = new TimeSpan();
+                        Console.WriteLine("What is the song's duration? ");
+                        var timeSpand = Console.ReadLine();
+
+                        enteredSong.AlbumId = PromptForInteger("What is the album's ID number? ");
+
+                        context.Song.Add(enteredSong);
+                        context.SaveChanges();
+                    }
+                }
+                else if (choice == "F")
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("Decide the fate of a band, choose them to be (S)igned or (U)nsigned.... ");
+                    var answer = Console.ReadLine().ToUpper();
+
+                    if (answer == "S")
+                    {
+                        var signedBand = PromptForString("Which band is to be signed? ");
+                        var bandToBeSigned = context.Band.FirstOrDefault(Band => Band.Name == signedBand);
+
+                        if (signedBand == null)
+                        {
+                            Console.WriteLine("Not happening today! ");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{signedBand} is now signed! ");
+
+                            bandToBeSigned.IsSigned = true;
+
+                            context.SaveChanges();
+                        }
+                    }
+                    else if (answer == "U")
+                    {
+                        var unsignedBand = PromptForString("Which band is to be unsigned? ");
+                        var bandToBeUnSigned = context.Band.FirstOrDefault(Band => Band.Name == unsignedBand);
+
+                        if (unsignedBand == null)
+                        {
+                            Console.WriteLine("Not happening today! ");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"{unsignedBand} is now signed! ");
+
+                            bandToBeUnSigned.IsSigned = false;
+
+                            context.SaveChanges();
                         }
                     }
 
-
-
-                    // else if ()
-
                 }
+
             }
-
-
-
-
-            // var Bands = context.Band;
-
-            // var Albums = context.Album;
-
-            // var Songs = context.Song;
-
-            // var albumCount = context.Album.Count();
-            // Console.WriteLine($"There are {albumCount} albums!");
-            // var albums = context.Album.Include(album => album.Band);
-
-            // foreach (var album in albums)
-            // {
-            //     if (album.Band != null)
-            //     {
-            //         Console.WriteLine($"There is a movie named {album.Title} by {album.Band.Name}! ");
-            //     }
-            // }
-
-            // foreach (var band in Bands)
-            // {
-            //     Console.WriteLine($"There is a band named {band.Name}! ");
-            // }
-
-            // foreach (var song in Songs)
-            // {
-            //     Console.WriteLine($"There is a song named {song.Title}! ");
-            // }
-
-            // TimeSpan timeSpan = new TimeSpan(2, 14, 18);
-            // Console.WriteLine(timeSpan.ToString());
-
         }
     }
 }
+
 
